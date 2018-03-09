@@ -15,4 +15,42 @@ class Shell
     {
 
     }
+
+    /**
+     * @param array $sshParams
+     */
+    public function connect($sshParams)
+    {
+
+    }
+
+    public function transfer($connection, $sourceFile, $destinationFile)
+    {
+
+    }
+
+    public function execInside($connection, $command)
+    {
+
+    }
+
+    /**
+     * Construct path from given list of dirs
+     *
+     * @param mixed ...$dirs
+     * @return string
+     */
+    public static function path(...$dirs)
+    {
+        $result = "";
+
+        foreach ($dirs as $dir) {
+            $result .= $dir;
+            if (substr($result, -1) != '/') {
+                $result .= '/';
+            }
+        }
+
+        return $result;
+    }
 }
