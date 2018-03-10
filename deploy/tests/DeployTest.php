@@ -54,12 +54,11 @@ class DeployTest extends TestCase
 
         $path = Shell::path($this->workingDir, $this->appDir);
 
-        $this->shell->expects($this->exactly(3))
+        $this->shell->expects($this->exactly(2))
             ->method('exec')
             ->withConsecutive(
-                $this->equalTo("cd {$path}"),
-                $this->equalTo("git fetch --all --tags"),
-                $this->equalTo("git checkout tags/{$this->appVersion}")
+                $this->equalTo("cd {$path} && git fetch --all --tags"),
+                $this->equalTo("cd {$path} && git checkout tags/{$this->appVersion}")
             );
 
         $this->getDeploy()->prepare();
@@ -80,11 +79,10 @@ class DeployTest extends TestCase
 
         $deployId = uniqid();
 
-        $this->shell->expects($this->exactly(2))
+        $this->shell->expects($this->exactly(1))
             ->method('exec')
             ->withConsecutive(
-                $this->equalTo("cd {$this->workingDir}"),
-                $this->equalTo("zip -r /tmp/deploy.zip {$this->appDir}")
+                $this->equalTo("cd {$this->workingDir} && zip -r /tmp/deploy.zip {$this->appDir}")
             );
 
         $this->shell->expects($this->exactly(1))
@@ -131,13 +129,13 @@ class DeployTest extends TestCase
 
         $path = Shell::path($this->destinationDir, $deployId);
         $current = Shell::path($this->destinationDir, 'current');
+        $current = Shell::withoutTrailingSlash($current);
 
-        $this->shell->expects($this->exactly(4))
+        $this->shell->expects($this->exactly(3))
             ->method('execInside')
             ->withConsecutive(
-                [$this->equalTo($sshConnection), "cd {$path}"],
-                [$this->equalTo($sshConnection), "composer install --no-dev"],
-                [$this->equalTo($sshConnection), "ln -sf {$path} {$current}"],
+                [$this->equalTo($sshConnection), "cd {$path} && composer install --no-dev"],
+                [$this->equalTo($sshConnection), "rm -f /srv/www/skeleton/current && ln -sf {$path} {$current}"],
                 [$this->equalTo($sshConnection), "service php-fpm reload"]
             );
 
@@ -168,7 +166,7 @@ class DeployTest extends TestCase
         $this->shell->expects($this->exactly(2))
             ->method('execInside')
             ->withConsecutive(
-                [$this->equalTo($sshConnection), "ln -sf {$path} {$current}"],
+                [$this->equalTo($sshConnection), "rm -f /srv/www/skeleton/current && ln -sf {$path} {$current}"],
                 [$this->equalTo($sshConnection), "service php-fpm reload"]
             );
 

@@ -61,11 +61,11 @@ class Shell
      *
      * @param SSH2 $connection
      * @param string $command
-     * @return bool
+     * @return string
      */
     public function execInside($connection, $command)
     {
-        return $connection->write($command);
+        return $connection->exec($command);
     }
 
     /**
@@ -86,5 +86,14 @@ class Shell
         }
 
         return $result;
+    }
+
+    public static function withoutTrailingSlash($path)
+    {
+        if (substr($path, -1) != '/') {
+            return $path;
+        }
+
+        return self::withoutTrailingSlash(substr($path, 0, strlen($path) - 1));
     }
 }

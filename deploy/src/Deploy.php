@@ -11,6 +11,8 @@ namespace deploy;
 
 class Deploy
 {
+    const COMMAND_DEPLOY = 'deploy';
+
     /**
      * @var Shell
      */
@@ -42,15 +44,13 @@ class Deploy
     {
         $path = Shell::path($this->config['workingDir'], $this->config['appDir']);
 
-        $this->shell->exec("cd {$path}");
-        $this->shell->exec("git fetch --all --tags");
-        $this->shell->exec("git checkout tags/{$this->config['appVersion']}");
+        $this->shell->exec("cd {$path} && git fetch --all --tags");
+        $this->shell->exec("cd {$path} && git checkout tags/{$this->config['appVersion']}");
     }
 
     public function transfer($deployId)
     {
-        $this->shell->exec("cd {$this->config['workingDir']}");
-        $this->shell->exec("zip -r /tmp/deploy.zip {$this->config['appDir']}");
+        $this->shell->exec("cd {$this->config['workingDir']} && zip -r /tmp/deploy.zip {$this->config['appDir']}");
 
         $connection = $this->getConnection();
 
@@ -70,10 +70,10 @@ class Deploy
 
         $path = Shell::path($this->config['destinationDir'], $deployId);
         $current = Shell::path($this->config['destinationDir'], 'current');
+        $current = Shell::withoutTrailingSlash($current);
 
-        $this->shell->execInside($connection, "cd {$path}");
-        $this->shell->execInside($connection, "composer install --no-dev");
-        $this->shell->execInside($connection, "ln -sf {$path} {$current}");
+        $this->shell->execInside($connection, "cd {$path} && composer install --no-dev");
+        $this->shell->execInside($connection, "rm -f /srv/www/skeleton/current && ln -sf {$path} {$current}");
         $this->shell->execInside($connection, "service php-fpm reload");
     }
 
@@ -84,7 +84,18 @@ class Deploy
         $path = Shell::path($this->config['destinationDir'], $deployId);
         $current = Shell::path($this->config['destinationDir'], 'current');
 
-        $this->shell->execInside($connection, "ln -sf {$path} {$current}");
+        $this->shell->execInside($connection, "rm -f /srv/www/skeleton/current && ln -sf {$path} {$current}");
         $this->shell->execInside($connection, "service php-fpm reload");
+    }
+
+    public function deploy()
+    {
+        $deployId = uniqid();
+
+        $this->prepare();
+        $this->transfer($deployId);
+        $this->install($deployId);
+
+        return $deployId;
     }
 }
