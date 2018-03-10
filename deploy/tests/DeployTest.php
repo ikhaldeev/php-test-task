@@ -110,4 +110,37 @@ class DeployTest extends TestCase
 
         $this->getDeploy()->transfer($deployId);
     }
+
+    public function testCanInstallApp()
+    {
+        $this->sshParams = [
+            'host' => 'test',
+            'username' => 'test',
+            'password' => 'test'
+        ];
+
+        $this->destinationDir = '/data/www';
+        $sshConnection = [];
+
+        $deployId = uniqid();
+
+        $this->shell->expects($this->exactly(1))
+            ->method('connect')
+            ->with($this->equalTo($this->sshParams))
+            ->will($this->returnValue($sshConnection));
+
+        $path = Shell::path($this->destinationDir, $deployId);
+        $current = Shell::path($this->destinationDir, 'current');
+
+        $this->shell->expects($this->exactly(4))
+            ->method('execInside')
+            ->withConsecutive(
+                [$this->equalTo($sshConnection), "cd {$path}"],
+                [$this->equalTo($sshConnection), "composer install --no-dev"],
+                [$this->equalTo($sshConnection), "ln -sf {$path} {$current}"],
+                [$this->equalTo($sshConnection), "service php-fpm reload"]
+            );
+
+        $this->getDeploy()->install($deployId);
+    }
 }
