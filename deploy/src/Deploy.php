@@ -76,4 +76,15 @@ class Deploy
         $this->shell->execInside($connection, "ln -sf {$path} {$current}");
         $this->shell->execInside($connection, "service php-fpm reload");
     }
+
+    public function rollbackTo($deployId)
+    {
+        $connection = $this->getConnection();
+
+        $path = Shell::path($this->config['destinationDir'], $deployId);
+        $current = Shell::path($this->config['destinationDir'], 'current');
+
+        $this->shell->execInside($connection, "ln -sf {$path} {$current}");
+        $this->shell->execInside($connection, "service php-fpm reload");
+    }
 }

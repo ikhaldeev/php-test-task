@@ -143,4 +143,35 @@ class DeployTest extends TestCase
 
         $this->getDeploy()->install($deployId);
     }
+
+    public function testCanRollbackToGivenDeployId()
+    {
+        $this->sshParams = [
+            'host' => 'test',
+            'username' => 'test',
+            'password' => 'test'
+        ];
+
+        $this->destinationDir = '/data/www';
+        $sshConnection = [];
+
+        $deployId = uniqid();
+
+        $this->shell->expects($this->exactly(1))
+            ->method('connect')
+            ->with($this->equalTo($this->sshParams))
+            ->will($this->returnValue($sshConnection));
+
+        $path = Shell::path($this->destinationDir, $deployId);
+        $current = Shell::path($this->destinationDir, 'current');
+
+        $this->shell->expects($this->exactly(2))
+            ->method('execInside')
+            ->withConsecutive(
+                [$this->equalTo($sshConnection), "ln -sf {$path} {$current}"],
+                [$this->equalTo($sshConnection), "service php-fpm reload"]
+            );
+
+        $this->getDeploy()->rollbackTo($deployId);
+    }
 }
