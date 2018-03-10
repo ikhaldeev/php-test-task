@@ -26,5 +26,8 @@ $deploy = new \deploy\Deploy($shell, $config);
 
 if ($options['command'] === \deploy\Deploy::COMMAND_DEPLOY) {
     echo $deploy->deploy(), PHP_EOL;
+} else if ($options['command'] === \deploy\Deploy::COMMAND_ROLLBACK) {
+    $deploy->rollbackTo($options['deployId']);
+    echo "Done", PHP_EOL;
 }
 

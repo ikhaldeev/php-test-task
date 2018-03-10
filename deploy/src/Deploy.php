@@ -12,6 +12,7 @@ namespace deploy;
 class Deploy
 {
     const COMMAND_DEPLOY = 'deploy';
+    const COMMAND_ROLLBACK = 'rollback';
 
     /**
      * @var Shell
@@ -83,6 +84,7 @@ class Deploy
 
         $path = Shell::path($this->config['destinationDir'], $deployId);
         $current = Shell::path($this->config['destinationDir'], 'current');
+        $current = Shell::withoutTrailingSlash($current);
 
         $this->shell->execInside($connection, "rm -f /srv/www/skeleton/current && ln -sf {$path} {$current}");
         $this->shell->execInside($connection, "service php-fpm reload");

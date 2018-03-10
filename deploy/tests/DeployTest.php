@@ -162,6 +162,7 @@ class DeployTest extends TestCase
 
         $path = Shell::path($this->destinationDir, $deployId);
         $current = Shell::path($this->destinationDir, 'current');
+        $current = Shell::withoutTrailingSlash($current);
 
         $this->shell->expects($this->exactly(2))
             ->method('execInside')
